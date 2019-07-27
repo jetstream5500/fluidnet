@@ -1,3 +1,19 @@
+var graph;
+
+// Freezing
+window.addEventListener('keypress', function(e) {
+    console.log(this)
+    console.log(e)
+    if (e.charCode == 102) {
+        if (graph.frozen) {
+            graph.frozen = false
+        } else {
+            graph.frozen = true
+            graph.freeze()
+        }
+    }
+}, false);
+
 class Vector {
     constructor(x, y) {
         this.x = x
@@ -38,6 +54,14 @@ class Graph {
         this.nodes = nodes
         this.adj_list = adj_list
     }
+
+    freeze() {
+        console.log(this.nodes)
+        for (var i = 0; i<this.nodes.length; i++) {
+            this.nodes.velocity = new Vector(0, 0)
+            console.log(this.nodes.velocity)
+        }
+    }
 }
 
 function generate_random_graph(num_nodes) {
@@ -48,7 +72,7 @@ function generate_random_graph(num_nodes) {
 
     // Making Nodes
     for (var i = 0; i<num_nodes; i++) {
-        var position = new Vector(Math.random()*500, Math.random()*500)
+        var position = new Vector(Math.random()*500+250, Math.random()*500+250)
         var velocity = new Vector(0, 0)
         var color =  colors[Math.floor(Math.random()*colors.length)]
 
@@ -71,15 +95,17 @@ function generate_random_graph(num_nodes) {
 }
 
 function setup() {
-    var graph = generate_random_graph(40)
+    graph = generate_random_graph(40)
     process(graph);
 }
 
 function process(graph) {
     setInterval(function() {
         draw(graph)
-        spread(graph, 100)
-        dampen_speeds(graph)
+        if (!graph.frozen) {
+            spread(graph, 100)
+        }
+        dampen_speeds(graph, 0.1)
         update_positions(graph)
     }, 10)
 }
@@ -140,16 +166,16 @@ function spread(graph, scaling_factor) {
     }
 }
 
-function dampen_speeds(graph) {
+function dampen_speeds(graph, percent) {
     for (var i = 0; i<graph.nodes.length; i++) {
-        node = graph.nodes[i]
-        node.velocity = node.velocity.scale(0.9)
+        node = graph.nodes[i];
+        node.velocity = node.velocity.scale(1-percent);
     }
 }
 
 function update_positions(graph) {
     for (var i = 0; i<graph.nodes.length; i++) {
-        node = graph.nodes[i]
-        node.position = node.position.add(node.velocity)
+        node = graph.nodes[i];
+        node.position = node.position.add(node.velocity);
     }
 }
