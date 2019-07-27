@@ -41,7 +41,7 @@ function generate_random_graph(num_nodes) {
 }
 
 function setup() {
-    var graph = generate_random_graph(20)
+    var graph = generate_random_graph(40)
     process(graph);
 }
 
@@ -108,8 +108,8 @@ function spread(graph) {
                     b.velocity.y += -magnitude * direction.y
                     b.velocity.y += -magnitude * direction.y
                 } else {
-                    var magnitude = ((40-distance(a.position, b.position)) / scaling_factor)*3
-                    console.log(distance(a.position, b.position))
+                    var magnitude = ((35-distance(a.position, b.position)) / scaling_factor)*3
+                    //console.log(distance(a.position, b.position))
                     var direction = {x: a.position.x-b.position.x, y: a.position.y-b.position.y}
                     normalize(direction)
 
@@ -132,8 +132,8 @@ function normalize(vec) {
 function dampen_speeds(graph) {
     for (var i = 0; i<graph.nodes.length; i++) {
         node = graph.nodes[i]
-        node.velocity.x *= 0.85;
-        node.velocity.y *= 0.85;
+        node.velocity.x *= 0.90;
+        node.velocity.y *= 0.90;
     }
 }
 
@@ -142,6 +142,12 @@ function update_positions(graph) {
         node = graph.nodes[i]
         node.position.x += node.velocity.x
         node.position.y += node.velocity.y
+
+        // Bounding Box
+        node.position.x = Math.min(node.position.x, 500)
+        node.position.x = Math.max(node.position.x, 0)
+        node.position.y = Math.min(node.position.y, 500)
+        node.position.y = Math.max(node.position.y, 0)
     }
 }
 
