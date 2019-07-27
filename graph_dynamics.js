@@ -1,4 +1,29 @@
+class Vector {
+    constructor(x, y) {
+        this.x = x
+        this.y = y
+    }
 
+    magnitude() {
+        return this.distance(new Vector(0, 0));
+    }
+
+    normalize() {
+        return this.scale(1/this.magnitude());
+    }
+
+    scale(c) {
+        return new Vector(c * this.x, c * this.y);
+    }
+
+    add(v) {
+        return new Vector(this.x + v.x, this.y + v.y);
+    }
+
+    distance(v) {
+        return Math.sqrt(Math.pow((this.x-v.x), 2) + Math.pow((this.y-v.y), 2));
+    }
+}
 
 class Node {
     constructor(position, velocity, color) {
@@ -16,18 +41,22 @@ class Graph {
 }
 
 function generate_random_graph(num_nodes) {
+    // Initializing Lists
     var nodes = []
     var adj_list = []
     var colors = ["#9B7EDE", "#9AEA23", "#f7a278"]
+
+    // Making Nodes
     for (var i = 0; i<num_nodes; i++) {
-        position = {x:Math.random()*500, y:Math.random()*500}
-        velocity = {x:0, y:0}
-        //color = "#9AEA23"
-        color =  colors[Math.floor(Math.random()*colors.length)]
+        var position = new Vector(Math.random()*500, Math.random()*500)
+        var velocity = new Vector(0, 0)
+        var color =  colors[Math.floor(Math.random()*colors.length)]
+
         nodes.push(new Node(position, velocity, color))
         adj_list.push([])
     }
 
+    // Add Connections
     for (var j = 0; j<num_nodes; j++) {
         index1 = Math.floor(Math.random()*num_nodes)
         index2 = Math.floor(Math.random()*num_nodes)
@@ -37,6 +66,7 @@ function generate_random_graph(num_nodes) {
         }
     }
 
+    // Generate Graph
     return new Graph(nodes, adj_list)
 }
 
@@ -48,11 +78,9 @@ function setup() {
 function process(graph) {
     setInterval(function() {
         draw(graph)
-        spread(graph)
-        //preserve_edges(graph)
+        spread(graph, 100)
         dampen_speeds(graph)
         update_positions(graph)
-        //console.log(graph)
     }, 10)
 }
 
@@ -90,72 +118,38 @@ function draw(graph) {
     //console.log(graph)
 }
 
-function spread(graph) {
-    scaling_factor = 100
+function spread(graph, scaling_factor) {
     for (var i = 0; i<graph.nodes.length; i++) {
         var a = graph.nodes[i]
-        //console.log(a)
         for (var j = 0; j<graph.nodes.length; j++) {
             var b = graph.nodes[j]
             if (i < j) {
                 if (!graph.adj_list[i].includes(j)) {
-                    var magnitude = scaling_factor / Math.pow(distance(a.position, b.position), 2)
-                    var direction = {x: a.position.x-b.position.x, y: a.position.y-b.position.y}
-                    normalize(direction)
-
-                    a.velocity.x += magnitude * direction.x
-                    a.velocity.y += magnitude * direction.y
-                    b.velocity.y += -magnitude * direction.y
-                    b.velocity.y += -magnitude * direction.y
+                    // Pushes away disconnected pieces
+                    var magnitude = scaling_factor / Math.pow(a.position.distance(b.position), 2)
                 } else {
-                    var magnitude = ((35-distance(a.position, b.position)) / scaling_factor)*3
-                    //console.log(distance(a.position, b.position))
-                    var direction = {x: a.position.x-b.position.x, y: a.position.y-b.position.y}
-                    normalize(direction)
-
-                    a.velocity.x += magnitude * direction.x
-                    a.velocity.y += magnitude * direction.y
-                    b.velocity.x += -magnitude * direction.x
-                    b.velocity.y += -magnitude * direction.y
+                    // Forces unit seperation with connected pieces
+                    var magnitude = ((35-a.position.distance(b.position)) / scaling_factor)
                 }
+                var direction = a.position.add(b.position.scale(-1)).normalize()
+
+                a.velocity = a.velocity.add(direction.scale(magnitude))
+                b.velocity = b.velocity.add(direction.scale(-magnitude))
             }
         }
     }
 }
 
-function normalize(vec) {
-    var mag = magnitude(vec)
-    vec.x /= mag
-    vec.y /= mag
-}
-
 function dampen_speeds(graph) {
     for (var i = 0; i<graph.nodes.length; i++) {
         node = graph.nodes[i]
-        node.velocity.x *= 0.90;
-        node.velocity.y *= 0.90;
+        node.velocity = node.velocity.scale(0.9)
     }
 }
 
 function update_positions(graph) {
     for (var i = 0; i<graph.nodes.length; i++) {
         node = graph.nodes[i]
-        node.position.x += node.velocity.x
-        node.position.y += node.velocity.y
-
-        // Bounding Box
-        node.position.x = Math.min(node.position.x, 500)
-        node.position.x = Math.max(node.position.x, 0)
-        node.position.y = Math.min(node.position.y, 500)
-        node.position.y = Math.max(node.position.y, 0)
+        node.position = node.position.add(node.velocity)
     }
-}
-
-function distance(a, b) {
-    //console.log("a, b", a, b)
-    return Math.sqrt(Math.pow((a.x-b.x), 2) + Math.pow((a.y-b.y), 2))
-}
-
-function magnitude(a) {
-    return distance(a, {x:0, y:0})
 }
