@@ -1,0 +1,12 @@
+body {
+	margin: 0;
+}
+
+#mainSVG {
+	border: 1px solid black;
+}
+
+#container {
+	width: 100vw;
+	height: 90vh;
+}
